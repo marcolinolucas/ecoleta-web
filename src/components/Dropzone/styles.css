@@ -1,3 +1,8 @@
+.wrapper-dropzone {
+  margin-top: 48px;
+	
+}
+
 .dropzone {
   height: 300px;
   background: #E1FAEC;
@@ -6,7 +11,6 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 48px;
   outline: 0;
 }
 

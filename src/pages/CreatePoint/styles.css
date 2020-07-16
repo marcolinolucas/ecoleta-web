@@ -164,6 +164,10 @@
   background: #2FB86E;
 }
 
+#page-create-point form button:disabled {
+  cursor: not-allowed;
+}
+
 .items-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

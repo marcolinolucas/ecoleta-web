@@ -67,7 +67,7 @@ To check out the videos and download files, I uploaded in my Google Drive, visit
 
 ## 💡 Future features <a name="futureFeatures" />
 
-- Form validate
+- ~~Form validation~~
 - Error handling
 - ~~Add favicon~~
 

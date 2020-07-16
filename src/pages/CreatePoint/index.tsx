@@ -1,5 +1,5 @@
 import React, {
-  useState, useEffect, ChangeEvent, FormEvent,
+  useState, useEffect, ChangeEvent, FormEvent
 } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import { FiArrowLeft } from 'react-icons/fi';
@@ -11,9 +11,12 @@ import './styles.css';
 import logo from '../../assets/logo.svg';
 
 import Dropzone from '../../components/Dropzone';
+import ValidationMessage from '../../components/ValidationMessage';
 
 import { getCollectItems, createPoint } from '../../services/EcoletaService';
 import { getUFs, getCitiesUF } from '../../services/IBGEService';
+
+import { isValidPhone, isValidEmail } from '../../helpers/stringHelper';
 
 interface Item {
   id: number,
@@ -22,11 +25,12 @@ interface Item {
 }
 
 const CreatePoint = () => {
+  const [validPointForm, setValidPointForm] = useState(false);
   const [items, setItems] = useState<Item[]>([]);
   const [ufs, setUfs] = useState<string[]>([]);
   const [cities, setCities] = useState<string[]>([]);
 
-  const [initialPosition, setinitialPosition] = useState<[number, number]>([0, 0]);
+  const [initialPosition, setInitialPosition] = useState<[number, number]>([0, 0]);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -38,13 +42,13 @@ const CreatePoint = () => {
   const [selectedCity, setSelectedCity] = useState('0');
   const [selectedPosition, setSelectedPosition] = useState<[number, number]>([0, 0]);
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
-  const [selectedFIle, setSelectedFile] = useState<File>();
+  const [selectedFile, setSelectedFile] = useState<File>();
 
   const history = useHistory();
 
   useEffect(() => navigator.geolocation.getCurrentPosition((position) => {
     const { latitude, longitude } = position.coords;
-    setinitialPosition([latitude, longitude]);
+    setInitialPosition([latitude, longitude]);
   }), []);
 
   useEffect(() => {
@@ -71,7 +75,26 @@ const CreatePoint = () => {
     }
 
     getCitiesUFAsync();
-  }, [selectedUf]);
+	}, [selectedUf]);
+	
+	useEffect(() => {
+		setValidPointForm(!!selectedFile
+			&& formData.name.length >= 4
+			&& isValidEmail(formData.email)
+			&& isValidPhone(formData.whatsapp)
+			&& selectedPosition[0] !== 0 && selectedPosition[1] !== 0
+			&& selectedCity !== '0'
+			&& selectedUf !== '0'
+			&& selectedItems.length !== 0
+		)
+	}, [
+		selectedUf,
+		selectedCity,
+		selectedPosition,
+		selectedItems,
+		selectedFile,
+		formData
+	])
 
   function handleSelectedUf(event: ChangeEvent<HTMLSelectElement>) {
     return setSelectedUf(event.target.value);
@@ -99,8 +122,8 @@ const CreatePoint = () => {
     const { name, value } = event.target;
 
     return setFormData({ ...formData, [name]: value });
-  }
-
+	}
+	
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
 
@@ -108,7 +131,7 @@ const CreatePoint = () => {
     const [latitude, longitude] = selectedPosition;
     const city = selectedCity;
     const uf = selectedUf;
-    const image = selectedFIle;
+    const image = selectedFile;
 
     const data = new FormData();
 
@@ -150,8 +173,14 @@ const CreatePoint = () => {
           {' '}
           ponto de coleta
         </h1>
-
-        <Dropzone onFileUploaded={setSelectedFile} />
+ 
+				<div className="wrapper-dropzone">
+					<ValidationMessage
+						valid={!!selectedFile}
+						message="Selecione uma imagem"
+					/>
+					<Dropzone onFileUploaded={setSelectedFile} />
+				</div>
 
         <fieldset>
           <legend>
@@ -160,6 +189,10 @@ const CreatePoint = () => {
 
           <div className="field">
             <label htmlFor="name">Nome da entidade</label>
+						<ValidationMessage
+							valid={formData.name.length >= 4}
+							message="Nome deve conter pelo menos 4 caracteres"
+						/> 
             <input
               type="text"
               id="name"
@@ -171,6 +204,10 @@ const CreatePoint = () => {
           <div className="field-group">
             <div className="field">
               <label htmlFor="email">Email</label>
+							<ValidationMessage
+								valid={isValidEmail(formData.email)}
+								message="Email deve ser válido"
+							/> 
               <input
                 type="email"
                 id="email"
@@ -180,6 +217,10 @@ const CreatePoint = () => {
             </div>
             <div className="field">
               <label htmlFor="whatsapp">Whatsapp</label>
+							<ValidationMessage
+								valid={isValidPhone(formData.whatsapp)}
+								message="Whatsapp deve ser um número válido"
+							/> 
               <input
                 type="text"
                 id="whatsapp"
@@ -195,7 +236,10 @@ const CreatePoint = () => {
             <h2>Endereço</h2>
             <span>Selecione o endereço no mapa</span>
           </legend>
-
+					<ValidationMessage
+						valid={selectedPosition[0] !== 0 && selectedPosition[1] !== 0}
+						message="Escolha um ponto no mapa"
+					/>
           <Map center={initialPosition} zoom={15} onClick={handleSelectedPosition}>
             <TileLayer
               attribution='&amp;copy <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
@@ -208,6 +252,10 @@ const CreatePoint = () => {
           <div className="field-group">
             <div className="field">
               <label htmlFor="uf">Estado (UF)</label>
+							<ValidationMessage
+								valid={selectedUf !== '0'}
+								message="Selecione uma UF"
+							/>
               <select
                 name="uf"
                 id="uf"
@@ -223,12 +271,16 @@ const CreatePoint = () => {
 
             <div className="field">
               <label htmlFor="city">Cidade</label>
+							<ValidationMessage
+								valid={selectedCity !== '0'}
+								message="Selecione uma cidade"
+							/>
               <select
                 name="city"
                 id="city"
                 value={selectedCity}
                 onChange={handleSelectedCity}
-              >
+              > 
                 <option value="0">Selecione uma cidade</option>
                 {cities.map((city) => (
                   <option key={city} value={city}>{city}</option>
@@ -243,7 +295,10 @@ const CreatePoint = () => {
             <h2>Ítens de coleta</h2>
             <span>Selecione um ou mais ítens abaixo</span>
           </legend>
-
+					<ValidationMessage
+						valid={selectedItems.length !== 0}
+						message="Selecione pelo menos um item"
+					/>
           <ul className="items-grid">
             {items.map((item) => (
               <li
@@ -258,7 +313,7 @@ const CreatePoint = () => {
           </ul>
         </fieldset>
 
-        <button type="submit">Cadastrar ponto de coleta</button>
+        <button type="submit" disabled={!validPointForm}>Cadastrar ponto de coleta</button>
       </form>
     </div>
   );
