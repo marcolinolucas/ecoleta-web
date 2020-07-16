@@ -20,9 +20,11 @@ async function getCollectItems() {
 
 async function createPoint(point: FormData) {
   try {
-    await API.post('/points', point);
+		const { data } = await API.post('/points', point);
+		return data.name;
   } catch (err) {
-    console.error(err);
+		console.error(err)
+		throw new Error(err.response.data)
   }
 }
 

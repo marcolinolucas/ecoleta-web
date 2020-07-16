@@ -148,9 +148,11 @@ const CreatePoint = () => {
       data.append('image', image);
     }
 
-    await createPoint(data);
-
-    alert('Ponto de coleta criado!');
+		createPoint(data)
+			.then((name) => alert(`${name} criado com sucesso!`))
+			.catch((err) => {
+				alert(`Erro ao criar ponto de coleta. Tente novamente! \n\n${err}`);
+			});
 
     history.push('/');
   }
