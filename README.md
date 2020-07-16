@@ -69,7 +69,7 @@ To check out the videos and download files, I uploaded in my Google Drive, visit
 
 - Form validate
 - Error handling
-- Add favicon
+- ~~Add favicon~~
 
 ## 🗃 Others application repositories <a name="othersApplicationRepositories" />
 
